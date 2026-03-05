@@ -1,0 +1,962 @@
+{
+  "info": {
+    "name": "FxNet.Test.Api - Swagger Complete Tests",
+    "description": "Comprehensive test suite based on valetax-test-swagger.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5072"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "testTreeName",
+      "value": "TestTree"
+    },
+    {
+      "key": "newTreeName",
+      "value": "DynamicTestTree"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "01 - Authentication (user.partner)",
+      "item": [
+        {
+          "name": "Remember Me - TEST_USER_001",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has token property\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "    pm.expect(jsonData.token).to.not.be.empty;",
+                  "    pm.collectionVariables.set('authToken', jsonData.token);",
+                  "    console.log('Auth token saved:', jsonData.token.substring(0, 20) + '...');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.partner.rememberMe?code=TEST_USER_001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.partner.rememberMe"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "TEST_USER_001",
+                  "description": "Unique partner code"
+                }
+              ]
+            },
+            "description": "Authenticate with existing partner code and get JWT token"
+          }
+        },
+        {
+          "name": "Remember Me - New User (Auto-Create)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"New user auto-created with token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.partner.rememberMe?code=NEW_USER_{{$timestamp}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.partner.rememberMe"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "NEW_USER_{{$timestamp}}"
+                }
+              ]
+            },
+            "description": "Test auto-creation of new partner"
+          }
+        },
+        {
+          "name": "Remember Me - DEMO_USER",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.partner.rememberMe?code=DEMO_USER",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.partner.rememberMe"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "DEMO_USER"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "description": "Tests for /api.user.partner.rememberMe endpoint"
+    },
+    {
+      "name": "02 - Journal API (user.journal)",
+      "item": [
+        {
+          "name": "Get Range - All Entries (skip=0, take=10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response structure is correct\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('skip');",
+                  "    pm.expect(jsonData).to.have.property('count');",
+                  "    pm.expect(jsonData).to.have.property('items');",
+                  "    pm.expect(jsonData.skip).to.equal(0);",
+                  "    pm.expect(jsonData.items).to.be.an('array');",
+                  "    pm.expect(jsonData.items.length).to.be.at.most(10);",
+                  "});",
+                  "",
+                  "pm.test(\"Journal items have required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.items.length > 0) {",
+                  "        var item = jsonData.items[0];",
+                  "        pm.expect(item).to.have.property('id');",
+                  "        pm.expect(item).to.have.property('eventId');",
+                  "        pm.expect(item).to.have.property('createdAt');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getRange?skip=0&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getRange"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get first 10 journal entries"
+          }
+        },
+        {
+          "name": "Get Range - Pagination Page 2 (skip=10, take=10)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getRange?skip=10&take=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getRange"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "10"
+                },
+                {
+                  "key": "take",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Test pagination - get second page"
+          }
+        },
+        {
+          "name": "Get Range - With Date Filter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from\": \"{{$isoTimestamp}}\",\n  \"to\": \"2025-12-31T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getRange?skip=0&take=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getRange"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Filter journal entries by date range"
+          }
+        },
+        {
+          "name": "Get Range - With Search Filter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"search\": \"node\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getRange?skip=0&take=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getRange"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "15"
+                }
+              ]
+            },
+            "description": "Search for journal entries containing 'node'"
+          }
+        },
+        {
+          "name": "Get Range - Combined Filters",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"from\": \"2025-01-01T00:00:00Z\",\n  \"to\": \"2025-12-31T23:59:59Z\",\n  \"search\": \"not found\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getRange?skip=0&take=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getRange"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "take",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Combine date and search filters"
+          }
+        },
+        {
+          "name": "Get Single - Journal Entry ID 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has all required fields\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('eventId');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "    pm.expect(jsonData).to.have.property('text');",
+                  "    pm.expect(jsonData.id).to.equal(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getSingle?id=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getSingle"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get journal entry by ID"
+          }
+        },
+        {
+          "name": "Get Single - Journal Entry ID 15",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getSingle?id=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getSingle"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single - Journal Entry ID 30",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getSingle?id=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getSingle"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single - Not Found (ID 999)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.journal.getSingle?id=999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.journal.getSingle"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "999"
+                }
+              ]
+            },
+            "description": "Negative test - journal entry not found"
+          }
+        }
+      ],
+      "description": "Tests for /api.user.journal.* endpoints"
+    },
+    {
+      "name": "03 - Tree API (user.tree)",
+      "item": [
+        {
+          "name": "Get Tree - TestTree (Existing)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is valid tree structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('children');",
+                  "    pm.expect(jsonData.children).to.be.an('array');",
+                  "    pm.expect(jsonData.children.length).to.be.greaterThan(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.get?treeName={{testTreeName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.get"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                }
+              ]
+            },
+            "description": "Get existing tree with nodes"
+          }
+        },
+        {
+          "name": "Get Tree - ProductionTree",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.get?treeName=ProductionTree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.get"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "ProductionTree"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tree - EmptyTree (No Nodes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Empty tree has no children\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.children).to.be.an('array');",
+                  "    pm.expect(jsonData.children).to.have.lengthOf(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.get?treeName=EmptyTree",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.get"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "EmptyTree"
+                }
+              ]
+            },
+            "description": "Get tree with no nodes"
+          }
+        },
+        {
+          "name": "Get Tree - Auto-Create New Tree",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"New tree auto-created\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('children');",
+                  "    pm.expect(jsonData.children).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.get?treeName={{newTreeName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.get"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{newTreeName}}"
+                }
+              ]
+            },
+            "description": "Test auto-creation of non-existent tree"
+          }
+        }
+      ],
+      "description": "Tests for /api.user.tree.get endpoint"
+    },
+    {
+      "name": "04 - Tree Node API (user.tree.node)",
+      "item": [
+        {
+          "name": "Create Node - Root Level",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.create?treeName={{testTreeName}}&nodeName=NewRootNode_{{$timestamp}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.create"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                },
+                {
+                  "key": "nodeName",
+                  "value": "NewRootNode_{{$timestamp}}"
+                }
+              ]
+            },
+            "description": "Create root-level node (no parent)"
+          }
+        },
+        {
+          "name": "Create Node - With Parent (Under Root)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.create?treeName={{testTreeName}}&parentNodeId=1&nodeName=ChildNode_{{$timestamp}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.create"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                },
+                {
+                  "key": "parentNodeId",
+                  "value": "1"
+                },
+                {
+                  "key": "nodeName",
+                  "value": "ChildNode_{{$timestamp}}"
+                }
+              ]
+            },
+            "description": "Create child node under Root (ID: 1)"
+          }
+        },
+        {
+          "name": "Create Node - Deep Level (Under Frontend)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.create?treeName={{testTreeName}}&parentNodeId=4&nodeName=DeepNode_{{$timestamp}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.create"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                },
+                {
+                  "key": "parentNodeId",
+                  "value": "4"
+                },
+                {
+                  "key": "nodeName",
+                  "value": "DeepNode_{{$timestamp}}"
+                }
+              ]
+            },
+            "description": "Create deeply nested node"
+          }
+        },
+        {
+          "name": "Create Node - Duplicate Name (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.create?treeName={{testTreeName}}&parentNodeId=1&nodeName=Projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.create"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                },
+                {
+                  "key": "parentNodeId",
+                  "value": "1"
+                },
+                {
+                  "key": "nodeName",
+                  "value": "Projects"
+                }
+              ]
+            },
+            "description": "Negative test - duplicate sibling name"
+          }
+        },
+        {
+          "name": "Create Node - Parent Not Found (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.create?treeName={{testTreeName}}&parentNodeId=999&nodeName=InvalidNode",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.create"],
+              "query": [
+                {
+                  "key": "treeName",
+                  "value": "{{testTreeName}}"
+                },
+                {
+                  "key": "parentNodeId",
+                  "value": "999"
+                },
+                {
+                  "key": "nodeName",
+                  "value": "InvalidNode"
+                }
+              ]
+            },
+            "description": "Negative test - parent node doesn't exist"
+          }
+        },
+        {
+          "name": "Rename Node - Success",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.rename?nodeId=11&newNodeName=Archive_Renamed_{{$timestamp}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.rename"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "11"
+                },
+                {
+                  "key": "newNodeName",
+                  "value": "Archive_Renamed_{{$timestamp}}"
+                }
+              ]
+            },
+            "description": "Rename Archive node"
+          }
+        },
+        {
+          "name": "Rename Node - Duplicate Sibling Name (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.rename?nodeId=5&newNodeName=Frontend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.rename"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "5"
+                },
+                {
+                  "key": "newNodeName",
+                  "value": "Frontend"
+                }
+              ]
+            },
+            "description": "Negative test - rename to existing sibling name"
+          }
+        },
+        {
+          "name": "Rename Node - Not Found (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.rename?nodeId=999&newNodeName=NewName",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.rename"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "999"
+                },
+                {
+                  "key": "newNodeName",
+                  "value": "NewName"
+                }
+              ]
+            },
+            "description": "Negative test - node not found"
+          }
+        },
+        {
+          "name": "Delete Node - Leaf Node (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.delete?nodeId=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.delete"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "10",
+                  "description": "Invoices node (leaf node)"
+                }
+              ]
+            },
+            "description": "Delete leaf node without children"
+          }
+        },
+        {
+          "name": "Delete Node - With Children (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.delete?nodeId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.delete"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "1",
+                  "description": "Root node has children"
+                }
+              ]
+            },
+            "description": "Negative test - cannot delete node with children"
+          }
+        },
+        {
+          "name": "Delete Node - Not Found (Should Fail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 500 (SecureException)\", function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api.user.tree.node.delete?nodeId=999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api.user.tree.node.delete"],
+              "query": [
+                {
+                  "key": "nodeId",
+                  "value": "999"
+                }
+              ]
+            },
+            "description": "Negative test - node not found"
+          }
+        }
+      ],
+      "description": "Tests for /api.user.tree.node.* endpoints"
+    }
+  ]
+}
