@@ -1,13 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.3.11520.95 d18.3
+VisualStudioVersion = 18.3.11520.95
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FxNet.Test.Api", "FxNet.Test.Api\FxNet.Test.Api.csproj", "{1A00FA8F-55DB-4EC1-84AE-7F49B34BDF47}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3363F51C-EB80-441E-AA23-B140FBCBCB6B}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\..\Downloads\valetax-test-swagger.json = ..\..\..\Downloads\valetax-test-swagger.json
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
